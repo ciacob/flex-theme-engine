@@ -5,9 +5,9 @@
 
 - Embedded theme switching
 
-- Dynamic base font scaling (relFontSize)
+- Dynamic base font scaling (`relFontSize`)
 
-- Accent color transformation (accent(...))
+- Accent color transformation (`accent(...)`)
 
 - System font selection with filtering
 
