@@ -1,4 +1,6 @@
 package com.github.ciacob.flex.ui.theming {
+    import flash.utils.getDefinitionByName;
+
     public class CSSActionParser {
         private static const NAMESPACE_MAP:Object = {
                 "s": "spark.components",
@@ -30,7 +32,6 @@ package com.github.ciacob.flex.ui.theming {
                     }
                 }
             }
-
             return tasks;
         }
 
@@ -76,6 +77,11 @@ package com.github.ciacob.flex.ui.theming {
                 var prop:String = partsLine[0].replace(/^\s+|\s+$/g, "");
                 var val:String = partsLine.slice(1).join(":").replace(/^\s+|\s+$/g, "");
                 var value:* = parseValue(val);
+
+                // Skip creating a task entirely if the value parser reported `undefined`.
+                if (value === undefined) {
+                    continue;
+                }
 
                 const isAccentValue:Boolean = (value && typeof (value) == "object" && value.type === "accent");
 
@@ -145,7 +151,18 @@ package com.github.ciacob.flex.ui.theming {
             // ClassReference("...")
             var classRefMatch:Array = /^ClassReference\("([^"]+)"\)$/.exec(val);
             if (classRefMatch) {
-                return classRefMatch[1];
+                var className : String = classRefMatch[1];
+
+                try {
+                    var classRef:Class = Class(getDefinitionByName(className));
+                    return classRef;
+                }
+                catch (e:Error) {
+                    trace("[CSSActionParser] Could not resolve `" + className +
+                            "` to a Class definition, make sure it was compiled. Skipping this task for now.");
+                }
+
+                return undefined;
             }
 
             // Number
