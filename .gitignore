@@ -1,2 +1,4 @@
 /asconfig.json
 /.vscode
+/bin/*.swc
+/bin/flex-theme-engine-app.xml
