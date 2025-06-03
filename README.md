@@ -58,6 +58,34 @@ Supports:
 - `accent(<light>, <sat>, <hue>)` — computes dynamic hues
 
 - Standard property application via `StyleUtil`
+  
+- Setting skin class names via `ClassReference("com.example.MyClass")`, **but** you must make sure that `MyClass` is linked and compiled, e.g.:
+```actionscript
+import com.example.MyClass
+// ...
+private var helper1:MyClass;
+```
+
+
+### 4. FlexSkins
+
+#### `IconButtonSkin.mxml`
+
+This is an improved Button class with support for an FXG icon and text. The icon is colorized using the `color` style, and the button background is colorized using the `chromeColor` **while preserving label and icon visibility** (unlike the OOB solution).
+
+To populate the button, one has three options:
+1. `<s:Button label="my text" />`
+2. `<s:Button content="{myFxgInstance}" />`
+3. `<s:Button content="{[myFxgInstance, 'my text']}" />`
+4. `<s:Button content="{['my text', myFxgInstance]}" />`
+
+Other combinations work as well, such as setting the text or icon as the lone member of the Array, or using `content` instead of `label`, etc.
+
+Other improvements:
+- The space around the content (label and/or icon) is computed as a factor of the current font size.
+- Order of text and icon in the Array reflects in their positioning in the button.
+
+-----
 
 ## Requirements
 - Apache Flex 4.16+
