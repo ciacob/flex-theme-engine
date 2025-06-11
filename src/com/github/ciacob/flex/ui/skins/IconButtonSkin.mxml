@@ -1,32 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
 
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
--->
-
-<!--- The default skin class for the Spark Button component.  
-
-       @see spark.components.Button
-        
-      @langversion 3.0
-      @playerversion Flash 10
-      @playerversion AIR 1.5
-      @productversion Flex 4
--->
 <s:SparkButtonSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
     xmlns:s="library://ns.adobe.com/flex/spark"
     xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
@@ -47,25 +20,70 @@
         <![CDATA[         
             import spark.components.Group;
             import ro.ciacob.utils.ColorUtils;
+            import spark.core.SpriteVisualElement;
+
+            [Bindable]
+            public var $icon:SpriteVisualElement;
+
+            [Bindable]
+            private var _chromeColor: uint = 0;
+
+            [Bindable]
+            private var _text:String;
+
+            [Bindable]
+            private var _fontSize:int = 12;
+
+            [Bindable]
+            private var _direction:String;
+
+            private var _content:Object;
+            private var _cornerRadius:Number = 2;
+            private var _color:uint = 0;
+            private var _iconMaxSize : Number = NaN;
+
+            private function _onInitialize(event:Event):void {
+                if (hostComponent) {
             
-            /**
-             * @private
-             */
-            override protected function initializationComplete():void
-            {
-                useChromeColor = false;
-                super.initializationComplete();
-            }  
+                    // The "content" Button property can be just text, just icon, or both in an Array, in any order.
+                    // If so, their order within the Array will decide their positioning inside the Button.
+                    _content = hostComponent.content;
             
-            /**
-             *  @private
-             */
-            override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number) : void
-            {
+                    if (_content && (_content is Array)) {
+            
+                        const contentArr:Array = hostComponent.content as Array;
+                        if (contentArr[0] is SpriteVisualElement) {
+                            $icon = (contentArr[0] as SpriteVisualElement);
+                            _text = contentArr[1] as String;
+                            _direction = 'ltr';
+                        }
+                        else {
+                            $icon = (contentArr[1] as SpriteVisualElement);
+                            _text = contentArr[0] as String;
+                            _direction = 'rtl';
+                        }
+                    }
+                    else if (_content is SpriteVisualElement) {
+                        $icon = _content as SpriteVisualElement;
+                    }
+                    else {
+                        _text = _content as String;
+                    }
+            
+                    // If we have an icon, take note of its original, intrinsic size (to be used for scaling)
+                    // then place it in our custom container.
+                    if ($icon) {
+                        _iconMaxSize = Math.max($icon.width, $icon.height);
+                        iconContainer.addElement($icon);
+                    }
+                }
+            }
+
+            override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number) : void {
+
                 // Use "cornerRadius" style to round button corners
                 var cr:Number = getStyle("cornerRadius");
-                if (_cornerRadius != cr)
-                {
+                if (_cornerRadius != cr) {
                     _cornerRadius = cr;
                     shadow.radiusX = _cornerRadius;
                     fill.radiusX = _cornerRadius;
@@ -79,106 +97,42 @@
                 if (hldownstroke2) hldownstroke2.radiusX = _cornerRadius;
                 
                 // Update label if changed
-                if (_text !== null && textContainer.text != _text) {
-                    textContainer.text = _text;
+                if (_text !== null && textRenderer.text != _text) {
+                    textRenderer.text = _text;
                 }
                 
-                // Use "color" to recolor the icon
+
+                // Use "chromeColor" to custom tint the lower layers of the button background.
+                // Unlike the OOB approach, this does not destroy icon colorization.
+                var cc : uint = getStyle("chromeColor");
+                if (bg && _chromeColor != cc) {
+                    _chromeColor = cc;
+                    ColorUtils.applyChromeColor (_chromeColor, bg);
+                }
+
+                // Use "color" to recolor the icon.
                 var co : uint = getStyle("color");
-                if (_icon && _color != co) {
+                if ($icon && _color != co) {
                     _color = co;
                     ColorUtils.tintSprite(_color, iconContainer);
                 }
 
-                // Use "fontSize" to control the icon size
+                // Use "fontSize" to control the icon size.
                 var fs : int = getStyle("fontSize");
                 if (_fontSize != fs && !isNaN(_iconMaxSize) && _iconMaxSize > 0) {
                     _fontSize = fs;
-                    if (_icon) {
+                    if ($icon) {
                         const iconScale : Number = _fontSize / _iconMaxSize;
                         iconContainer.scaleX = iconContainer.scaleY = iconScale;
                     }
                 }
 
-                // Use "chromeColor" to tint the lowest layer of the button background.
-                // Unlike the OOB approach, this does not destroy the label visibility 
-                // when "chromeColor" takes darker shades (as is the case in 
-                // "dark themes").
-                var cc : uint = getStyle("chromeColor");
-                if (_chromeColor != cc) {
-                    _chromeColor = cc;
-                    ColorUtils.tintSprite(_chromeColor, fillContainer, 0.75);
-                }
-
-
                 super.updateDisplayList(unscaledWidth, unscaledHeight);
             }
             
-            private var _cornerRadius:Number = 2;
-            private var _color:uint = 0;
-            private var _chromeColor: uint = 0;
-            private var _content:Object;
-            private var _iconMaxSize : Number = NaN;
 
-            [Bindable]
-            private var _text:String;
-
-            [Bindable]
-            private var _icon:SpriteVisualElement;
-
-            [Bindable]
-            private var _fontSize:int = 12;
-
-            [Bindable]
-            private var _direction:String;
                                  
         ]]>        
-    </fx:Script>
-
-    <fx:Script>
-        <![CDATA[
-            import spark.primitives.Graphic;
-            import flash.utils.getQualifiedClassName;
-            import flash.utils.getQualifiedSuperclassName;
-            import spark.core.SpriteVisualElement;
-            
-            private function _onInitialize(event:Event):void {
-                if (hostComponent) {
-            
-                    // The "content" Button property can be just text, just icon, or both in an Array, in any order.
-                    // If so, their order within the Array will decide their positioning inside the Button.
-                    _content = hostComponent.content;
-            
-                    if (_content && (_content is Array)) {
-            
-                        const contentArr:Array = hostComponent.content as Array;
-                        if (contentArr[0] is SpriteVisualElement) {
-                            _icon = (contentArr[0] as SpriteVisualElement);
-                            _text = contentArr[1] as String;
-                            _direction = 'ltr';
-                        }
-                        else {
-                            _icon = (contentArr[1] as SpriteVisualElement);
-                            _text = contentArr[0] as String;
-                            _direction = 'rtl';
-                        }
-                    }
-                    else if (_content is SpriteVisualElement) {
-                        _icon = _content as SpriteVisualElement;
-                    }
-                    else {
-                        _text = _content as String;
-                    }
-            
-                    // If we have an icon, take note of its original, intrinsic size (to be used for scaling)
-                    // then place it in our custom container.
-                    if (_icon) {
-                        _iconMaxSize = Math.max(_icon.width, _icon.height);
-                        iconContainer.addElement(_icon);
-                    }
-                }
-            }
-        ]]>
     </fx:Script>
 
     <!-- states -->
@@ -189,27 +143,28 @@
         <s:State name="disabled"/>
     </s:states>
 
-    <!-- layer 1: shadow -->
-    <!--- @private -->
-    <s:Rect id="shadow" left="-1" right="-1" top="-1" bottom="-1" radiusX="2">
-        <s:fill>
-            <s:LinearGradient rotation="90">
-                <s:GradientEntry color="0x000000"
-                    color.down="0xFFFFFF"
-                    alpha="0.01"
-                    alpha.down="0"/>
-                <s:GradientEntry color="0x000000"
-                    color.down="0xFFFFFF"
-                    alpha="0.07"
-                    alpha.down="0.5"/>
-            </s:LinearGradient>
-        </s:fill>
-    </s:Rect>
+    <s:Group id="bg" left="0" right="0" top="0" bottom="0">
 
-    <s:Group id="fillContainer" left="1" right="1" top="1" bottom="1">
+        <!-- layer 1: shadow -->
+        <!--- @private -->
+        <s:Rect id="shadow" left="-1" right="-1" top="-1" bottom="-1" radiusX="2">
+            <s:fill>
+                <s:LinearGradient rotation="90">
+                    <s:GradientEntry color="0x000000"
+                        color.down="0xFFFFFF"
+                        alpha="0.01"
+                        alpha.down="0"/>
+                    <s:GradientEntry color="0x000000"
+                        color.down="0xFFFFFF"
+                        alpha="0.07"
+                        alpha.down="0.5"/>
+                </s:LinearGradient>
+            </s:fill>
+        </s:Rect>
+
         <!-- layer 2: fill -->
         <!--- @private -->
-        <s:Rect id="fill" width="100%" height="100%" radiusX="2">
+        <s:Rect id="fill" left="1" right="1" top="1" bottom="1" radiusX="2">
             <s:fill>
                 <s:LinearGradient rotation="90">
                     <s:GradientEntry color="0xFFFFFF"
@@ -226,7 +181,7 @@
 
         <!-- layer 3: fill lowlight -->
         <!--- @private -->
-        <s:Rect id="lowlight" width="100%" height="100%" radiusX="2">
+        <s:Rect id="lowlight" left="1" right="1" top="1" bottom="1" radiusX="2">
             <s:fill>
                 <s:LinearGradient rotation="270">
                     <s:GradientEntry color="0x000000" ratio="0.0" alpha="0.0627"/>
@@ -238,7 +193,7 @@
 
         <!-- layer 4: fill highlight -->
         <!--- @private -->
-        <s:Rect id="highlight" width="100%" height="100%" radiusX="2">
+        <s:Rect id="highlight" left="1" right="1" top="1" bottom="1" radiusX="2">
             <s:fill>
                 <s:LinearGradient rotation="90">
                     <s:GradientEntry color="0xFFFFFF"
@@ -260,7 +215,7 @@
 
         <!-- layer 5: highlight stroke (all states except down) -->
         <!--- @private -->
-        <s:Rect id="highlightStroke" width="100%" height="100%" radiusX="2" excludeFrom="down">
+        <s:Rect id="highlightStroke" left="1" right="1" top="1" bottom="1" radiusX="2" excludeFrom="down">
             <s:stroke>
                 <s:LinearGradientStroke rotation="90" weight="1">
                     <s:GradientEntry color="0xFFFFFF" alpha.over="0.22"/>
@@ -271,7 +226,7 @@
 
         <!-- layer 6: highlight stroke (down state only) -->
         <!--- @private -->
-        <s:Rect id="hldownstroke1" width="100%" height="100%" radiusX="2" includeIn="down">
+        <s:Rect id="hldownstroke1" left="1" right="1" top="1" bottom="1" radiusX="2" includeIn="down">
             <s:stroke>
                 <s:LinearGradientStroke rotation="90" weight="1">
                     <s:GradientEntry color="0x000000" alpha="0.25" ratio="0.0"/>
@@ -282,9 +237,8 @@
                 </s:LinearGradientStroke>
             </s:stroke>
         </s:Rect>
-
         <!--- @private -->
-        <s:Rect id="hldownstroke2" left="1" right="1" top="1" bottom="1" radiusX="2" includeIn="down">
+        <s:Rect id="hldownstroke2" left="2" right="2" top="2" bottom="2" radiusX="2" includeIn="down">
             <s:stroke>
                 <s:LinearGradientStroke rotation="90" weight="1">
                     <s:GradientEntry color="0x000000" alpha="0.09" ratio="0.0"/>
@@ -293,22 +247,22 @@
             </s:stroke>
         </s:Rect>
 
-    </s:Group>
+        <!-- layer 7: border - put on top of the fill so it doesn't disappear when scale is less than 1 -->
+        <!--- @private -->
+        <s:Rect id="border" left="0" right="0" top="0" bottom="0" width="20" height="20" radiusX="2">
+            <s:stroke>
+                <s:LinearGradientStroke rotation="90" weight="1">
+                    <s:GradientEntry color="0x000000"
+                        alpha="0.5625"
+                        alpha.down="0.6375"/>
+                    <s:GradientEntry color="0x000000"
+                        alpha="0.75"
+                        alpha.down="0.85"/>
+                </s:LinearGradientStroke>
+            </s:stroke>
+        </s:Rect>
 
-    <!-- layer 7: border - put on top of the fill so it doesn't disappear when scale is less than 1 -->
-    <!--- @private -->
-    <s:Rect id="border" left="0" right="0" top="0" bottom="0" width="20" height="20" radiusX="2">
-        <s:stroke>
-            <s:LinearGradientStroke rotation="90" weight="1">
-                <s:GradientEntry color="0x000000"
-                    alpha="0.5625"
-                    alpha.down="0.6375"/>
-                <s:GradientEntry color="0x000000"
-                    alpha="0.75"
-                    alpha.down="0.85"/>
-            </s:LinearGradientStroke>
-        </s:stroke>
-    </s:Rect>
+    </s:Group>
 
     <!-- layer 8: (icon and) text -->
     <s:Group horizontalCenter="0" verticalCenter="0" layoutDirection="{_direction}">
@@ -317,14 +271,16 @@
         </s:layout>
 
         <!-- ICON -->
-        <s:Group id="iconContainer" visible="{!!_icon}" includeInLayout="{!!_icon}"/>
+        <s:Group id="iconContainer" visible="{!!$icon}" includeInLayout="{!!$icon}"/>
 
         <!-- TEXT -->
-        <s:Label id="textContainer" visible="{!!_text}" includeInLayout="{!!_text}"
-            textAlign="center"
-            maxDisplayedLines="1"
-            verticalAlign="bottom">
-        </s:Label>
+        <s:Group id="textContainer" visible="{!!_text}" includeInLayout="{!!_text}">
+            <s:Label id="textRenderer"
+                textAlign="center"
+                maxDisplayedLines="1"
+                verticalAlign="bottom">
+            </s:Label>
+        </s:Group>
     </s:Group>
 
 </s:SparkButtonSkin>
