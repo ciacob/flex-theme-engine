@@ -11,33 +11,31 @@ package com.github.ciacob.flex.ui.theming {
 
     public class ThemeManager {
 
-        public static const DEFAULT_FONT_EXCLUDE_PATTERNS:Array = [
-                "light",
-                "medium",
-                "heavy",
-                "bold",
-                "black",
-                "heading",
-                "titling",
-                "semil",
-                "semib",
-                "condensed",
-                "italic",
-                "script",
-                "print",
-                "engraved",
-                "wingdings",
-                "webdings",
-                "marlett",
-                "ms outlook",
-                "ms reference specialty",
-                "mt extra",
-                "TtsNote",
-                "symbol",
-                "finale",
-                "maestro",
-                "copyist",
-            ];
+        public static const DEFAULT_FONT_EXCLUDE_PATTERNS:Array = ["light",
+            "medium",
+            "heavy",
+            "bold",
+            "black",
+            "heading",
+            "titling",
+            "semil",
+            "semib",
+            "condensed",
+            "italic",
+            "script",
+            "print",
+            "engraved",
+            "wingdings",
+            "webdings",
+            "marlett",
+            "ms outlook",
+            "ms reference specialty",
+            "mt extra",
+            "TtsNote",
+            "symbol",
+            "finale",
+            "maestro",
+            "copyist",];
 
         private static const sm:IStyleManager2 = StyleManager.getStyleManager(null);
 
@@ -88,19 +86,18 @@ package com.github.ciacob.flex.ui.theming {
         /**
          * Sets the global "accent color", then recomputes and reapplies all related color variations,
          * across the entire active theme.
-         * 
+         *
          * This method updates all properties, across all selectors, that use a value in the form of
-         * `accent ( )`. The parenthesized values, if given, define filters that produce color 
+         * `accent ( )`. The parenthesized values, if given, define filters that produce color
          * variations (see `StyleUtil.applyAccentColor()` for details).
-         * 
+         *
          * @param color The new accent color to use.
          */
         public static function setAccentColor(color:uint):void {
             StyleUtil.setGlobalStyle("accentColor", color);
 
             for each (var info:Object in lastThemeAccents) {
-                StyleUtil.applyAccentColor(info.selector, info.property,
-                        info.factors[0], info.factors[1], info.factors[2]);
+                StyleUtil.applyAccentColor(info.selector, info.property, info.factors[0], info.factors[1], info.factors[2]);
             }
         }
 
@@ -134,7 +131,7 @@ package com.github.ciacob.flex.ui.theming {
                             if (!styleTracker[relSel])
                                 styleTracker[relSel] = [];
                             styleTracker[relSel].push("fontSize");
-                            // intentional fall-through to also process other class styles
+                        // intentional fall-through to also process other class styles
 
                         case "setComponentStyle":
                         case "setClassStyle":
@@ -163,10 +160,8 @@ package com.github.ciacob.flex.ui.theming {
             // Convert styleTracker object to array
             lastThemeStyles = [];
             for (var selector:String in styleTracker) {
-                lastThemeStyles.push({
-                            selector: selector,
-                            properties: styleTracker[selector]
-                        });
+                lastThemeStyles.push({selector: selector,
+                        properties: styleTracker[selector]});
             }
         }
 
@@ -216,28 +211,43 @@ package com.github.ciacob.flex.ui.theming {
             }
 
             var fonts:Array = Font.enumerateFonts(true);
-            var names:Array = fonts
-                .filter(function(f:Font, ..._):Boolean {
-                        if (f.fontType !== FontType.DEVICE || f.fontStyle !== FontStyle.REGULAR)
+            var names:Array = fonts.filter(function(f:Font, ... _):Boolean {
+                if (f.fontType !== FontType.DEVICE || f.fontStyle !== FontStyle.REGULAR)
+                    return false;
+
+                if (excludePatterns && (excludePatterns is Array) && excludePatterns.length > 0) {
+                    var lowerName:String = f.fontName.toLowerCase();
+                    for each (var pattern:String in excludePatterns as Array) {
+                        if (lowerName.indexOf(pattern.toLowerCase()) !== -1) {
                             return false;
-
-                        if (excludePatterns && (excludePatterns is Array) && excludePatterns.length > 0) {
-                            var lowerName:String = f.fontName.toLowerCase();
-                            for each (var pattern:String in excludePatterns as Array) {
-                                if (lowerName.indexOf(pattern.toLowerCase()) !== -1) {
-                                    return false;
-                                }
-                            }
                         }
+                    }
+                }
 
-                        return true;
-                    })
-                .map(function(f:Font, ..._):String {
-                        return f.fontName;
-                    });
+                return true;
+            }).map(function(f:Font, ... _):String {
+                return f.fontName;
+            });
 
             names.sort(_sortFonts);
             return names;
+        }
+
+        /**
+         * Returns the value of given `propertyName` if defined as part of the `global`
+         * CSS selector; returns `undefined` otherwise.
+         *
+         * @param   propertyName
+         *          Name of a global CSS property name to query and retrieve.
+         *
+         * @return  The retrieved CSS value, or `undefined` if not found.
+         */
+        public static function getGlobalStyle(propertyName:String):* {
+            const globalDecl:CSSStyleDeclaration = sm.getStyleDeclaration("global");
+            if (!globalDecl) {
+                return undefined;
+            }
+            return globalDecl.getStyle(propertyName);
         }
 
         /**
@@ -257,11 +267,7 @@ package com.github.ciacob.flex.ui.theming {
          */
         public static function setPreferredDefaultFonts(defaults:Array):void {
             var os:String = Capabilities.os.toLowerCase();
-            var platform:String =
-                os.indexOf("win") !== -1 ? "win" :
-                os.indexOf("mac") !== -1 ? "mac" :
-                os.indexOf("android") !== -1 ? "android" :
-                os.indexOf("ios") !== -1 ? "ios" : "other";
+            var platform:String = os.indexOf("win") !== -1 ? "win" : os.indexOf("mac") !== -1 ? "mac" : os.indexOf("android") !== -1 ? "android" : os.indexOf("ios") !== -1 ? "ios" : "other";
 
             var entry:Object = null;
             for each (var item:Object in defaults) {
