@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Generic skin that provides a background via the styleable
+     `BackgroundSurface` component. Note that you can also use 
+     `BackgroundSurface` directly in your component.
+-->
+<s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009"
+    xmlns:mx="library://ns.adobe.com/flex/mx"
+    xmlns:s="library://ns.adobe.com/flex/spark" 
+    xmlns:local="*" 
+    xmlns:components="com.github.ciacob.flex.ui.components.*"
+    alpha.disabled="0.5">
+
+    <fx:Metadata>
+        [HostComponent("spark.components.SkinnableContainer")]
+    </fx:Metadata>
+
+    <!-- Define the skin states. -->
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="disabled"/>
+    </s:states>
+
+    <!-- Background -->
+    <components:BackgroundSurface height="100%" width="100%"
+        borderColors="{getStyle('borderColors')}"
+        borderAlphas="{getStyle('borderAlphas')}"
+        borderWidths="{getStyle('borderWidths')}"
+        xMultiplyColors="{getStyle('xMultiplyColors')}"
+        yMultiplyColors="{getStyle('yMultiplyColors')}"
+        cornerRadius="{getStyle('cornerRadius')}"
+        padding="{getStyle('padding')}"/>
+
+    <!-- Content -->
+    <s:Group id="contentGroup"
+        left="{getStyle('padding')}"
+        right="{getStyle('padding')}"
+        top="{getStyle('padding')}"
+        bottom="{getStyle('padding')}">
+        <s:layout>
+            <s:VerticalLayout/>
+        </s:layout>
+    </s:Group>
+</s:Skin>
