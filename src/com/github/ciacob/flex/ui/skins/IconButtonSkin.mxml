@@ -75,6 +75,10 @@
                     if ($icon) {
                         _iconMaxSize = Math.max($icon.width, $icon.height);
                         iconContainer.addElement($icon);
+
+                        // Icon should be centered within allotted space.
+                         $icon.verticalCenter = 0;
+                        $icon.horizontalCenter = 0;
                     }
                 }
             }
@@ -119,19 +123,20 @@
 
                 // Use "fontSize" to control the icon size.
                 var fs : int = getStyle("fontSize");
-                if (_fontSize != fs && !isNaN(_iconMaxSize) && _iconMaxSize > 0) {
+                if (_fontSize != fs && $icon && !isNaN(_iconMaxSize) && _iconMaxSize > 0) {
                     _fontSize = fs;
-                    if ($icon) {
+                        // Reserve a square space for uniformity
+                        iconContainer.minWidth = _iconMaxSize;
+                        iconContainer.minHeight = _iconMaxSize;
+
+                        // Scale the icon within reserved space
                         const iconScale : Number = _fontSize / _iconMaxSize;
                         iconContainer.scaleX = iconContainer.scaleY = iconScale;
-                    }
                 }
 
                 super.updateDisplayList(unscaledWidth, unscaledHeight);
             }
-            
 
-                                 
         ]]>        
     </fx:Script>
 
