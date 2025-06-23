@@ -35,7 +35,7 @@ package com.github.ciacob.flex.ui.components {
          */
         private function _getArrayOf(styleName:String):Array {
             var rawVal:* = getStyle(styleName);
-            if (rawVal === undefined) {
+            if (rawVal === undefined || rawVal === null) {
                 return [];
             }
             if (rawVal is Array) {
