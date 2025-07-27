@@ -21,10 +21,10 @@
 <fx:Script fb:purpose="styling">
         <![CDATA[
 
-            import ro.ciacob.utils.ColorUtils;
             import flash.events.MouseEvent;
             import spark.components.ButtonBarButton;
             import mx.events.CloseEvent;
+            import com.github.ciacob.flex.ui.ColorUtils;
 
             [Bindable]
             public var edgeType: String;
