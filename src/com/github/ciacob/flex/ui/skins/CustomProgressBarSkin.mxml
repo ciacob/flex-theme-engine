@@ -11,7 +11,7 @@
 		backgroundColor="{getStyle('trackColor')}"
 		minHeight="{getStyle('minTrackHeight') || 2}"
 		top="0" left="0" right="0"
-		cornerRadius="{getStyle('cornerRadius')}">
+		cornerRadius="{getStyle('cornerRadius') || 0}">
 
 		<!-- The "fill" of the Progress bar -->
 		<s:Group id="progressGroup"
