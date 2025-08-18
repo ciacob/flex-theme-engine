@@ -1,3 +1,4 @@
 /asconfig.json
 /.vscode
 /bin
+.DS_Store
