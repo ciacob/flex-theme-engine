@@ -21,6 +21,7 @@
             import spark.components.Group;
             import spark.core.SpriteVisualElement;
             import com.github.ciacob.flex.ui.ColorUtils;
+            import com.github.ciacob.flex.ui.constants.StyleDefaults;
 
             [Bindable]
             public var $icon:SpriteVisualElement;
@@ -282,7 +283,7 @@
     <!-- layer 8: (icon and) text -->
     <s:Group horizontalCenter="0" verticalCenter="0" layoutDirection="{_direction}">
         <s:layout>
-            <s:HorizontalLayout padding="{_fontSize * 0.8}" verticalAlign="middle"/>
+            <s:HorizontalLayout padding="{_fontSize * StyleDefaults.PADDING_RATIO}" verticalAlign="middle"/>
         </s:layout>
 
         <!-- ICON -->

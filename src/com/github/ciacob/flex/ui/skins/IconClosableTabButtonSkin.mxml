@@ -25,8 +25,7 @@
             import mx.events.CloseEvent;
             import com.github.ciacob.flex.ui.ColorUtils;
             import spark.core.SpriteVisualElement;
-
-            public static const DEFAULT_FONT_SIZE : int = 12;
+            import com.github.ciacob.flex.ui.constants.StyleDefaults;
 
             // -----------------------
             // The `edgeType` property
@@ -197,7 +196,7 @@
 
                 // Use "fontSize" to control the size of all available icons. Assume a valid
                 // default value for safety.
-                const fontSizeVal : int = getStyle("fontSize") || DEFAULT_FONT_SIZE;
+                const fontSizeVal : int = getStyle("fontSize") || StyleDefaults.FONT_SIZE;
                 if (_fontSize != fontSizeVal) {
                     _fontSize = fontSizeVal;
 
@@ -460,7 +459,7 @@
     <!-- layer 8: row with icon/text/close button -->
     <s:HGroup width="100%" height="100%"
         verticalAlign="middle" horizontalAlign="center"
-        padding="{_fontSize * 0.8}">
+        padding="{_fontSize * StyleDefaults.PADDING_RATIO}">
 
         <!-- Custom icon and label, in their own container, with order decided by `layoutDirection` -->
         <s:HGroup horizontalCenter="0" verticalCenter="0"
@@ -481,6 +480,7 @@
 
         <!-- `Close` icon, in its own container -->
         <s:Group id="closeIconContainer"
+            useHandCursor="true" buttonMode="true"
             visible="{_mustShowX}" includeInLayout="{_mustShowX}">
 
             <!-- "Mouse-catch" background -->
