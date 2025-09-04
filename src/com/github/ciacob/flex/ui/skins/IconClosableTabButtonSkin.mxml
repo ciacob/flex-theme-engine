@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<s:SparkButtonSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+    xmlns:s="library://ns.adobe.com/flex/spark"
+    xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
+    xmlns:icons="com.github.ciacob.flex.ui.icons.*"
+    minWidth="21" minHeight="21"
+    alpha.disabled="0.5"
+    preinitialize="_onPreInitialize()">
+
+    <!-- host component -->
+    <fx:Metadata>
+        <![CDATA[
+            /**
+             * @copy spark.skins.spark.ApplicationSkin#hostComponent
+             */
+            [HostComponent("spark.components.ButtonBarButton")]
+        ]]>
+    </fx:Metadata>
+
+<fx:Script fb:purpose="styling">
+        <![CDATA[
+            import flash.events.MouseEvent;
+            import spark.components.ButtonBarButton;
+            import mx.events.CloseEvent;
+            import com.github.ciacob.flex.ui.ColorUtils;
+            import spark.core.SpriteVisualElement;
+
+            public static const DEFAULT_FONT_SIZE : int = 12;
+
+            // -----------------------
+            // The `edgeType` property
+            // -----------------------
+
+            // Storage for the `edgeType` property value.
+            private var _edgeType:String;
+
+            // Flag to raise when the `edgeType` property has been externally changed.
+            private var _edgeTypeChanged : Boolean;
+
+            /**
+             * Determines on which side corner rounding would occur. Accepted values
+             * are `Left` or `Right`, verbatim, or `null`.
+             */
+            [Bindable]
+            public function set edgeType (value : String): void {
+                if (value !== _edgeType && 
+                [null, 'Left', 'Right'].indexOf (value) !== -1) {
+                    _edgeType = value;
+                    _edgeTypeChanged = true;
+                    invalidateDisplayList();
+                }
+            }
+
+            /**
+             * Returns current edge type.
+             */
+            public function get edgeType () : String {
+                return _edgeType;
+            }
+
+
+            // User-provided icon (SpriteVisualElement).
+            [Bindable]
+            public var _icon:SpriteVisualElement;
+
+            // Optional text override from content.
+            [Bindable]
+            private var _text:String;                    
+
+            // Whether to show the `close` icon
+            [Bindable]
+            private var _mustShowX : Boolean = false;
+
+            // Storage for the `fontSize` style value.
+            [Bindable]
+            private var _fontSize : int;
+
+            // `ltr` if icon then text, `rtl` if text then icon.
+            [Bindable]
+            private var _direction:String;
+
+
+            // Storage for the `_chromeColor` style value.
+            private var _chromeColor: uint = 0;
+
+            // Storage for the `_cornerRadius` style value.
+            private var _cornerRadius:Number = 2;
+
+            // Color used to tint icons (both arbitrary icon and the close X)
+            private var _color : uint = 0;
+
+            // Storage for the host component of this skin.
+            private var _hostComponent:ButtonBarButton;
+
+            // Intrinsic size of the `close` icon.
+            private var _closeIconMaxSize : Number = NaN;
+
+            // Intrinsic size of custom icon.
+            private var _contentIconMaxSize : Number = NaN;
+
+            // The resolved dataset of the host component.
+            private var _data : Object;
+
+            // The resolved `content` source of the host component.
+            private var _content:Object;                 
+            
+            /**
+             * Overridden to extract and prepare/update icon(s) and text.
+             */
+            override protected function commitProperties () : void {
+                super.commitProperties();
+
+                // Exit early if you couldn't resolve the host of this component.
+                if (!_hostComponent) {
+                    return;
+                }
+
+                // Extract the `content` data property. Fall back to the OOB `label`
+                // property if missing.
+                _data = _hostComponent.data;
+                if (!_data) {
+                    return;
+                }
+
+                _content = _data.content;
+                if (!_content) {
+                    _content = _data.label;
+                }
+
+                // Extract text and/or label from the `content` data property. The following
+                // scenarios are supported:
+                // - content="My Label";
+                // - content={new MyIcon()};
+                // - content={["My Label"]};
+                // - content={[new MyIcon()]};
+                // - content={[new MyIcon(), "My Label"]};
+                // - content={["My Label", new MyIcon()]};
+                //
+                // If both a label and icon are provided, their declaration order is mirrored
+                // in the component by setting its `layoutDirection` accordingly.
+                if (_content && (_content is Array)) {
+                    const contentArr:Array = _content as Array;
+
+                    var $icon : SpriteVisualElement;
+                    var $text: String;
+                    if (contentArr[0] is SpriteVisualElement) {
+                        $icon = (contentArr[0] as SpriteVisualElement);
+                        $text = contentArr.length > 1 ? (contentArr[1] as String) : null;
+                        _direction = 'ltr';
+                    } else {
+                        $text = contentArr[0] as String;
+                        $icon = contentArr.length > 1 ? (contentArr[1] as SpriteVisualElement) : null;
+                        _direction = 'rtl';
+                    }
+                }
+                else if (_content is SpriteVisualElement) {
+                    $icon = _content as SpriteVisualElement;
+                }
+                else {
+                    $text = _content as String;
+                }
+
+                // Set label if changed.
+                if ($text !== _text) {
+                    _text = $text;
+                    textRenderer.text = _text;
+                }
+
+                // If we have an custom icon, reserve a square space based on its intrinsic dimensions,
+                // center it within that space, and add the icon to its parent.
+                if ($icon !== _icon) {
+
+                    // Clear old icon if any
+                    if (_icon && _icon.parent === contentIconContainer) {
+                        contentIconContainer.removeAllElements();
+                    }
+
+                    // Set up (new) icon
+                    _icon = $icon;
+                    if (_icon) {
+                        _contentIconMaxSize = Math.max(_icon.width, _icon.height);
+                        _icon.verticalCenter = 0;
+                        _icon.horizontalCenter = 0;
+                        if (_icon.parent !== contentIconContainer) {
+                            contentIconContainer.addElement(_icon);
+                        }
+                    } else {
+                        _contentIconMaxSize = 0;
+                    }
+                }
+
+                // Take note of the `close` icon maximum intrinsic size.
+                if (closeIcon && !_closeIconMaxSize) {
+                    _closeIconMaxSize = Math.max(closeIcon.width, closeIcon.height);
+                }
+
+                // Use "fontSize" to control the size of all available icons. Assume a valid
+                // default value for safety.
+                const fontSizeVal : int = getStyle("fontSize") || DEFAULT_FONT_SIZE;
+                if (_fontSize != fontSizeVal) {
+                    _fontSize = fontSizeVal;
+
+                    // Scale custom icon at `fontSize`.
+                    if (_icon && !isNaN(_contentIconMaxSize) && _contentIconMaxSize > 0) {
+                        contentIconContainer.minWidth  = _contentIconMaxSize;
+                        contentIconContainer.minHeight = _contentIconMaxSize;
+                        const contentIconScale : Number = _fontSize / _contentIconMaxSize;
+                        contentIconContainer.scaleX = contentIconContainer.scaleY = contentIconScale;
+                    }
+
+                    // Scale `close` icon at 70% of `fontSize`.
+                    if (closeIcon && !isNaN(_closeIconMaxSize) && _closeIconMaxSize > 0) {
+                        const closeScale : Number = (_fontSize / _closeIconMaxSize) * 0.7;
+                        closeIconContainer.scaleX = closeIconContainer.scaleY = closeScale;
+                    }
+                }
+            }
+
+            /**
+             * Overridden to round corners, 
+             */
+            override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number) : void {
+
+                // Round the corners if applicable, based on current `edgeType` and `cornerRadius`.
+                // Assume a valid default value for safety.
+                var $cornerRadius:Number = edgeType? getStyle("cornerRadius") || 0: 0;
+                if (_cornerRadius != $cornerRadius) {
+                    _cornerRadius = $cornerRadius;
+
+                    const edges : Array = edgeType? [edgeType] : ["Left", "Right"];
+
+                    for (var i : int = 0; i < edges.length; i++) {
+                        const edge : String = edges[i];
+
+                        const topRadiusX: String = "top" + edge + "RadiusX";
+                        const bottomRadiusX: String = "bottom" + edge + "RadiusX";
+
+                        shadow[topRadiusX] = _cornerRadius;
+                        shadow[bottomRadiusX] = _cornerRadius;
+
+                        fill[topRadiusX] = _cornerRadius;
+                        fill[bottomRadiusX] = _cornerRadius;
+
+                        lowlight[topRadiusX] = _cornerRadius;
+                        lowlight[bottomRadiusX] = _cornerRadius;
+
+                        highlight[topRadiusX] = _cornerRadius;
+                        highlight[bottomRadiusX] = _cornerRadius;
+
+                        highlightStroke[topRadiusX] = _cornerRadius;
+                        highlightStroke[bottomRadiusX] = _cornerRadius;
+
+                        border[topRadiusX] = _cornerRadius;
+                        border[bottomRadiusX] = _cornerRadius;
+
+                        if (hldownstroke1) {
+                            hldownstroke1[topRadiusX] = _cornerRadius;
+                            hldownstroke1[bottomRadiusX] = _cornerRadius;
+                        }
+                        if (hldownstroke2) {
+                            hldownstroke2[topRadiusX] = _cornerRadius;
+                            hldownstroke2[bottomRadiusX] = _cornerRadius;
+                        }
+                    }
+                }
+
+                // Decide whether the `close` button will be available.
+                _mustShowX = _data && _data.closable;
+                _hostComponent.mouseChildren = _mustShowX;
+
+                // Use "chromeColor" to custom tint the lower layers of the button background.
+                // Unlike the OOB approach, this does not touch icon colorization.
+                const chromeColorVal : uint = getStyle("chromeColor");
+                if (_chromeColor != chromeColorVal) {
+                    _chromeColor = chromeColorVal;
+
+                    if (bgLayers) {
+                        ColorUtils.applyChromeColor (_chromeColor, bgLayers);
+                    }
+                }
+
+                // Use "color" to recolor icons
+                const $colorVal : uint = getStyle("color");
+                if (_color != $colorVal) {
+                    _color = $colorVal;
+
+                    // Tint custom icon container if present.
+                    if (_icon && contentIconContainer) {
+                        ColorUtils.tintSprite(_color, contentIconContainer);
+                    }
+
+                    // Tint the `close` icon container if visible.
+                    if (closeIcon && closeIconContainer && _mustShowX) {
+                        ColorUtils.tintSprite(_color, closeIconContainer, 2);
+                    }
+                }
+
+                // Call super class' logic.
+                super.updateDisplayList(unscaledWidth, unscaledHeight);
+            }
+
+            /**
+             * Listener. Executed at the beginning of the component initialization sequence.
+             */
+            private function _onPreInitialize():void {
+
+                // Try to expose a correctly typed host component.
+                if (hostComponent is ButtonBarButton) {
+                    _hostComponent = hostComponent as ButtonBarButton;
+                }
+            }
+
+            /**
+             * Listener. Executed when the end-user clicks on the `close` button. The action is
+             * rerouted; the host Button component does not receive the click, but dispatches
+             * a `CloseEvent` instead.
+             */
+            private function _onTabXClick(event:MouseEvent):void {
+                event.preventDefault();
+                event.stopPropagation();
+                if (_hostComponent) {
+                    const closeEvent:CloseEvent = new CloseEvent(CloseEvent.CLOSE, true);
+                    closeEvent.detail = _hostComponent.itemIndex;
+                    _hostComponent.dispatchEvent(closeEvent);
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <!-- STATES -->
+    <s:states>
+        <s:State name="up"/>
+        <s:State name="over" stateGroups="overStates"/>
+        <s:State name="down" stateGroups="downStates"/>
+        <s:State name="disabled" stateGroups="disabledStates"/>
+        <s:State name="upAndSelected" stateGroups="selectedStates, selectedUpStates"/>
+        <s:State name="overAndSelected" stateGroups="overStates, selectedStates"/>
+        <s:State name="downAndSelected" stateGroups="downStates, selectedStates"/>
+        <s:State name="disabledAndSelected" stateGroups="selectedUpStates, disabledStates, selectedStates"/>
+    </s:states>
+
+    <!-- BACKGROUND LAYERS -->
+    <s:Group id="bgLayers" left="0" right="0" top="0" bottom="0">
+        <!-- layer 1: shadow -->
+        <s:Rect id="shadow" left="0" right="0" bottom="-1" height="1">
+            <s:fill>
+                <s:SolidColor color="0x000000"
+                    color.downStates="0xFFFFFF"
+                    alpha="0.07"
+                    alpha.downStates="0.5"/>
+            </s:fill>
+        </s:Rect>
+
+        <!-- layer 2: fill -->
+        <s:Rect id="fill" left="1" right="1" top="1" bottom="1">
+            <s:fill>
+                <s:LinearGradient rotation="90">
+                    <s:GradientEntry color="0xFFFFFF"
+                        color.selectedUpStates="0xBBBDBD"
+                        color.overStates="0xBBBDBD"
+                        color.downStates="0xAAAAAA"
+                        alpha="0.85"
+                        alpha.overAndSelected="1"/>
+                    <s:GradientEntry color="0xD8D8D8"
+                        color.selectedUpStates="0x9FA0A1"
+                        color.over="0x9FA0A1"
+                        color.overAndSelected="0x8E8F90"
+                        color.downStates="0x929496"
+                        alpha="0.85"
+                        alpha.overAndSelected="1"/>
+                </s:LinearGradient>
+            </s:fill>
+        </s:Rect>
+
+        <!-- layer 3: fill lowlight -->
+        <s:Rect id="lowlight" left="1" right="1" top="1" bottom="1">
+            <s:fill>
+                <s:LinearGradient rotation="270">
+                    <s:GradientEntry color="0x000000" ratio="0.0" alpha="0.0627"/>
+                    <s:GradientEntry color="0x000000" ratio="0.48" alpha="0.0099"/>
+                    <s:GradientEntry color="0x000000" ratio="0.48001" alpha="0"/>
+                </s:LinearGradient>
+            </s:fill>
+        </s:Rect>
+
+        <!-- layer 4: fill highlight -->
+        <s:Rect id="highlight" left="1" right="1" top="1" bottom="1">
+            <s:fill>
+                <s:LinearGradient rotation="90">
+                    <s:GradientEntry color="0xFFFFFF"
+                        ratio="0.0"
+                        alpha="0.33"
+                        alpha.selectedUpStates="0.22"
+                        alpha.overStates="0.22"
+                        alpha.downStates="0.12"/>
+                    <s:GradientEntry color="0xFFFFFF"
+                        ratio="0.48"
+                        alpha="0.33"
+                        alpha.selectedUpStates="0.22"
+                        alpha.overStates="0.22"
+                        alpha.downStates="0.12"/>
+                    <s:GradientEntry color="0xFFFFFF"
+                        ratio="0.48001"
+                        alpha="0"/>
+                </s:LinearGradient>
+            </s:fill>
+        </s:Rect>
+
+        <!-- layer 5: highlight stroke (all states except down) -->
+        <s:Rect id="highlightStroke" left="1" right="1" top="1" bottom="1" excludeFrom="downStates">
+            <s:stroke>
+                <s:LinearGradientStroke rotation="90" weight="1">
+                    <s:GradientEntry color="0xFFFFFF" alpha.overStates="0.22" alpha.selectedUpStates="0.33"/>
+                    <s:GradientEntry color="0xD8D8D8" alpha.overStates="0.22" alpha.selectedUpStates="0.33"/>
+                </s:LinearGradientStroke>
+            </s:stroke>
+        </s:Rect>
+
+        <!-- layer 6: highlight stroke (down state only) -->
+        <s:Rect id="hldownstroke1" left="1" right="1" top="1" bottom="1"
+            includeIn="downStates, selectedUpStates, overAndSelected">
+            <s:stroke>
+                <s:LinearGradientStroke rotation="90" weight="1">
+                    <s:GradientEntry color="0x000000" alpha="0.25" ratio="0.0"/>
+                    <s:GradientEntry color="0x000000" alpha="0.25" ratio="0.001"/>
+                    <s:GradientEntry color="0x000000" alpha="0.07" ratio="0.0011"/>
+                    <s:GradientEntry color="0x000000" alpha="0.07" ratio="0.965"/>
+                    <s:GradientEntry color="0x000000" alpha="0.00" ratio="0.9651"/>
+                </s:LinearGradientStroke>
+            </s:stroke>
+        </s:Rect>
+        <s:Rect id="hldownstroke2" left="2" right="2" top="2" bottom="2"
+            includeIn="downStates, selectedUpStates, overAndSelected">
+            <s:stroke>
+                <s:LinearGradientStroke rotation="90" weight="1">
+                    <s:GradientEntry color="0x000000" alpha="0.09" ratio="0.0"/>
+                    <s:GradientEntry color="0x000000" alpha="0.00" ratio="0.0001"/>
+                </s:LinearGradientStroke>
+            </s:stroke>
+        </s:Rect>
+
+        <!-- layer 7: border -->
+        <s:Rect id="border" left="0" right="0" top="0" bottom="0" width="69" height="20">
+            <s:stroke>
+                <s:LinearGradientStroke rotation="90" weight="1">
+                    <s:GradientEntry color="0x000000"
+                        alpha="0.5625"
+                        alpha.down="0.6375"
+                        alpha.selectedStates="0.6375"/>
+                    <s:GradientEntry color="0x000000"
+                        alpha="0.75"
+                        alpha.down="0.85"
+                        alpha.selectedStates="0.85"/>
+                </s:LinearGradientStroke>
+            </s:stroke>
+        </s:Rect>
+    </s:Group>
+
+    <!-- layer 8: row with icon/text/close button -->
+    <s:HGroup width="100%" height="100%"
+        verticalAlign="middle" horizontalAlign="center"
+        padding="{_fontSize * 0.8}">
+
+        <!-- Custom icon and label, in their own container, with order decided by `layoutDirection` -->
+        <s:HGroup horizontalCenter="0" verticalCenter="0"
+            layoutDirection="{_direction}"
+            verticalAlign="middle">
+
+            <!-- Custom icon, in its own container -->
+            <s:Group id="contentIconContainer"
+                visible="{!!_icon}" includeInLayout="{!!_icon}"/>
+
+            <!-- Text -->
+            <s:Label id="textRenderer"
+                textAlign="center"
+                verticalAlign="middle"
+                maxDisplayedLines="1"
+                visible="{!!_text}" includeInLayout="{!!_text}"/>
+        </s:HGroup>
+
+        <!-- `Close` icon, in its own container -->
+        <s:Group id="closeIconContainer"
+            visible="{_mustShowX}" includeInLayout="{_mustShowX}">
+
+            <!-- "Mouse-catch" background -->
+            <s:Rect left="0" right="0" top="0" bottom="0">
+                <s:fill>
+                    <s:SolidColor color="0x000000" alpha="0.001"/>
+                </s:fill>
+            </s:Rect>
+
+            <!-- The actual icon -->
+            <icons:SimpleCloseIcon id="closeIcon" click="_onTabXClick(event)"/>
+        </s:Group>
+    </s:HGroup>
+
+</s:SparkButtonSkin>

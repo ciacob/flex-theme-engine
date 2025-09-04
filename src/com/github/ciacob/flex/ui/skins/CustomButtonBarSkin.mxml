@@ -63,7 +63,7 @@
             @see spark.skins.spark.ButtonBarMiddleButtonSkin
         -->
         <fx:Component id="middleButton" >
-            <s:ButtonBarButton skinClass="com.github.ciacob.flex.ui.skins.ClosableTabButtonSkin" />
+            <s:ButtonBarButton skinClass="com.github.ciacob.flex.ui.skins.IconClosableTabButtonSkin" />
         </fx:Component>
 
         <!--- 
