@@ -54,6 +54,11 @@ package com.github.ciacob.flex.ui.components {
         override protected function updateDisplayList(w:Number, h:Number):void {
             super.updateDisplayList(w, h);
 
+            // Exit early for an empty canvas.
+            if (w === 0 || h === 0) {
+                return;
+            }
+
             const cornerRadius:Number = getStyle("cornerRadius") || 0;
             const borderColors:Array = _getArrayOf("borderColors");
             const borderAlphas:Array = _getArrayOf("borderAlphas");
