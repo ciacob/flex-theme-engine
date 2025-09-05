@@ -6,7 +6,7 @@
     xmlns:icons="com.github.ciacob.flex.ui.icons.*"
     minWidth="21" minHeight="21"
     alpha.disabled="0.5"
-    preinitialize="_onPreInitialize()">
+    preinitialize="_onPreinitialize()">
 
     <!-- host component -->
     <fx:Metadata>
@@ -168,7 +168,7 @@
 
                 // If we have an custom icon, reserve a square space based on its intrinsic dimensions,
                 // center it within that space, and add the icon to its parent.
-                if ($icon !== _icon) {
+                if ($icon !== _icon && contentIconContainer) {
 
                     // Clear old icon if any
                     if (_icon && _icon.parent === contentIconContainer) {
@@ -217,6 +217,21 @@
             }
 
             /**
+             * Overridden to catch later style changes.
+             */
+            override public function styleChanged(styleProp:String):void {
+                super.styleChanged(styleProp);
+
+                if (styleProp == null || styleProp == "styleName" ||
+                    styleProp == "fontSize" || styleProp == "color" || styleProp == "chromeColor") {
+
+                    // Just do invalidation, and the existing logic will carry on.
+                    invalidateProperties();
+                    invalidateDisplayList();
+                }
+            }
+
+            /**
              * Overridden to round corners, 
              */
             override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number) : void {
@@ -224,8 +239,9 @@
                 // Round the corners if applicable, based on current `edgeType` and `cornerRadius`.
                 // Assume a valid default value for safety.
                 var $cornerRadius:Number = edgeType? getStyle("cornerRadius") || 0: 0;
-                if (_cornerRadius != $cornerRadius) {
+                if (_cornerRadius != $cornerRadius || _edgeTypeChanged) {
                     _cornerRadius = $cornerRadius;
+                    _edgeTypeChanged = false;
 
                     const edges : Array = edgeType? [edgeType] : ["Left", "Right"];
 
@@ -302,7 +318,7 @@
             /**
              * Listener. Executed at the beginning of the component initialization sequence.
              */
-            private function _onPreInitialize():void {
+            private function _onPreinitialize():void {
 
                 // Try to expose a correctly typed host component.
                 if (hostComponent is ButtonBarButton) {
